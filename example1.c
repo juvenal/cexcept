@@ -7,7 +7,7 @@ cexcept.h interface.  See README for copyright information.
 
 This application is single-threaded and uses a global exception context.
 
-See example2.c for a demonstration of nested Try blocks, avoidance of
+See example2.c for a demonstration of nested try blocks, avoidance of
 global variables by passing the context in function arguments, and the
 use of a polymorphic exception type.
 
@@ -27,19 +27,19 @@ extern struct exception_context the_exception_context[1];
 /* End of separate .h file. */
 
 
-void demo_throw(int fail)
-{
-  fprintf(stderr, "enter demo_throw(%d)\n", fail);
-  if (fail) Throw 42;
-  fprintf(stderr, "return from demo_throw(%d)\n", fail);
+void demo_throw(int fail) {
+	fprintf(stderr, "enter demo_throw(%d)\n", fail);
+	if (fail) {
+		throw 42;
+	}
+	fprintf(stderr, "return from demo_throw(%d)\n", fail);
 }
 
 
-void foo(int fail)
-{
-  fprintf(stderr, "enter foo(%d)\n", fail);
-  demo_throw(fail);
-  fprintf(stderr, "return from foo(%d)\n", fail);
+void foo(int fail) {
+	fprintf(stderr, "enter foo(%d)\n", fail);
+	demo_throw(fail);
+	fprintf(stderr, "return from foo(%d)\n", fail);
 }
 
 
@@ -48,19 +48,22 @@ void foo(int fail)
 struct exception_context the_exception_context[1];
 
 
-int main()
-{
-  int e;
+int main(int argc, char *argv[]) {
+	int e;
 
-  Try {
-    foo(0);
-    foo(1);
-    foo(2);
-  }
-  Catch (e) fprintf(stderr, "exception %d\n", e);
+	try {
+		foo(0);
+		foo(1);
+		foo(2);
+	}
+	catch(e)
+		fprintf(stderr, "exception %d\n", e);
 
-  Try foo(3);
-  Catch_anonymous fprintf(stderr, "anonymous exception\n");
+ 	try
+		foo(3);
 
-  return EXIT_SUCCESS;
+	catch_anonymous
+		fprintf(stderr, "anonymous exception\n");
+
+	return EXIT_SUCCESS;
 }

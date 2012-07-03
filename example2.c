@@ -26,13 +26,13 @@ See example.c for a simpler example.
 enum exception_flavor { okay, oops, screwup, barf };
 
 struct exception {
-  enum exception_flavor flavor;
-  const char *msg;
-  union {
-    int oops;
-    long screwup;
-    char barf[8];
-  } info;
+	enum exception_flavor flavor;
+	const char *msg;
+	union {
+		int oops;
+		long screwup;
+		char barf[8];
+	} info;
 };
 
 define_exception_type(struct exception);
@@ -41,99 +41,103 @@ define_exception_type(struct exception);
 
 
 struct thread_state {
-  int blah;
-  struct exception_context ec[1];
-  unsigned long junk;
+	int blah;
+	struct exception_context ec[1];
+	unsigned long junk;
 };
 
 
-void demo_throw(struct exception_context *the_exception_context)
-{
-  static int count = 0;
-  struct exception e;
+void demo_throw(struct exception_context *the_exception_context) {
+	static int count = 0;
+	struct exception e;
 
-  fprintf(stderr, "enter demo_throw\n");
+	fprintf(stderr, "enter demo_throw\n");
 
-  ++count;
+	++count;
 
-  if (count == 2) {
-    e.flavor = oops;
-    e.msg = "demo oops message";
-    e.info.oops = 17;
-    Throw e;
-  }
-  else if (count == 3) {
-    e.flavor = barf;
-    e.msg = "demo barf message";
-    strcpy(e.info.barf, "ABCDEFG");
-    Throw e;
-  }
-  else if (count == 4) {
-    e.flavor = screwup;
-    e.msg = "demo screwup message";
-    e.info.screwup = 987654321;
-    Throw e;
-  }
+	if (count == 2) {
+		e.flavor = oops;
+		e.msg = "demo oops message";
+		e.info.oops = 17;
+		throw e;
+	}
+	else if (count == 3) {
+		e.flavor = barf;
+		e.msg = "demo barf message";
+		strcpy(e.info.barf, "ABCDEFG");
+		throw e;
+	}
+	else if (count == 4) {
+		e.flavor = screwup;
+		e.msg = "demo screwup message";
+		e.info.screwup = 987654321;
+		throw e;
+	}
 
-  fprintf(stderr, "return from demo_throw\n");
+	fprintf(stderr, "return from demo_throw\n");
 }
 
 
-void foo(struct thread_state *state)
-{
-  fprintf(stderr, "enter foo\n");
-  demo_throw(state->ec);
-  fprintf(stderr, "return from foo\n");
+void foo(struct thread_state *state) {
+	fprintf(stderr, "enter foo\n");
+	demo_throw(state->ec);
+	fprintf(stderr, "return from foo\n");
 }
 
 
-void bar(struct thread_state *state)
-{
-  struct exception_context *the_exception_context = state->ec;
-  struct exception e;
+void bar(struct thread_state *state) {
+	struct exception_context *the_exception_context = state->ec;
+	struct exception e;
 
-  fprintf(stderr, "enter bar\n");
+	fprintf(stderr, "enter bar\n");
 
-  Try foo(state);
-  Catch (e) {
-    switch (e.flavor) {
-      case okay: break;
-      case oops: fprintf(stderr, "bar caught oops (info == %d): %s\n",
-                         e.info.oops, e.msg);
-                 break;
-        default: Throw e;
-    }
-  }
+	Try foo(state);
+	Catch (e) {
+		switch (e.flavor) {
+			case okay:
+				break;
+			case oops:
+				fprintf(stderr, "bar caught oops (info == %d): %s\n",
+			            e.info.oops, e.msg);
+				break;
+			default:
+				throw e;
+		}
+	}
 
-  fprintf(stderr, "return from bar\n");
+	fprintf(stderr, "return from bar\n");
 }
 
 
-int main()
-{
-  struct thread_state state[1];
-  struct exception_context *the_exception_context = state->ec;
-  struct exception e;
+int main(int argc, char *argv[]) {
+	struct thread_state state[1];
+	struct exception_context *the_exception_context = state->ec;
+	struct exception e;
 
-  init_exception_context(the_exception_context);
+	init_exception_context(the_exception_context);
 
-  Try {
-    bar(state);  /* no exceptions */
-    bar(state);  /* exception will be caught by bar(), looks okay to us */
-    bar(state);  /* bar() will rethrow the exception */
-    fprintf(stderr, "we won't get here\n");
-  }
-  Catch (e) {
-    switch (e.flavor) {
-         case okay: break;
-         case barf: fprintf(stderr, "main caught barf (info == %s): %s\n",
-                            e.info.barf, e.msg);
-                    break;
-      case screwup: fprintf(stderr, "main caught screwup (info == %ld): %s\n",
-                            e.info.screwup, e.msg);
-           default: fprintf(stderr, "main caught unknown exception\n");
-    }
-  }
+	try {
+		bar(state);  /* no exceptions */
+		bar(state);  /* exception will be caught by bar(), looks okay to us */
+		bar(state);  /* bar() will rethrow the exception */
+		fprintf(stderr, "we won't get here\n");
+	}
+	catch (e) {
+		switch (e.flavor) {
+			case okay:
+				break;
+			case barf:
+				fprintf(stderr, "main caught barf (info == %s): %s\n",
+						e.info.barf, e.msg);
+				break;
+			case screwup:
+				fprintf(stderr, "main caught screwup (info == %ld): %s\n",
+						e.info.screwup, e.msg);
+				break;
+			default:
+				fprintf(stderr, "main caught unknown exception\n");
+		}
+	}
 
-  return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
