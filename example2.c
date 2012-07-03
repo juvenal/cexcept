@@ -91,8 +91,10 @@ void bar(struct thread_state *state) {
 
 	fprintf(stderr, "enter bar\n");
 
-	Try foo(state);
-	Catch (e) {
+	try
+		foo(state);
+
+	catch(e) {
 		switch (e.flavor) {
 			case okay:
 				break;
@@ -122,7 +124,8 @@ int main(int argc, char *argv[]) {
 		bar(state);  /* bar() will rethrow the exception */
 		fprintf(stderr, "we won't get here\n");
 	}
-	catch (e) {
+
+	catch(e) {
 		switch (e.flavor) {
 			case okay:
 				break;
